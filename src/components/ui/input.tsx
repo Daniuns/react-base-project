@@ -1,38 +1,19 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { Input as InputPrimitive } from "@base-ui/react/input";
+import { cn } from "cn";
 
-interface InputProps extends React.ComponentProps<"input"> {
-  togglePassword?: boolean;
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <InputPrimitive
+      type={type}
+      data-slot="input"
+      className={cn(
+        "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
-
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, togglePassword, ...props }, ref) => {
-    const [showPassword, setShowPassword] = React.useState(false);
-
-    return (
-      <div className="relative w-full">
-        <input
-          type={type === "password" && showPassword ? "text" : type}
-          className={cn(
-            "flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            togglePassword && "pr-12",
-            className
-          )}
-          ref={ref}
-          {...props}
-        />
-        {togglePassword && type === "password" && (
-          <span
-            className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer text-sm text-muted-foreground"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? "Hide" : "Show"}
-          </span>
-        )}
-      </div>
-    );
-  }
-);
-Input.displayName = "Input";
 
 export { Input };

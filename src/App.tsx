@@ -1,23 +1,21 @@
-import "./App.css";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router";
-import { AppRouter } from "./Router/appRouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { AppErrorBoundary } from "@/components/app-error-boundary";
+import { AuthProvider } from "@/features/auth/auth-provider";
+import { queryClient } from "@/lib/query-client";
+import { AppRouter } from "@/Router/appRouter";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRouter />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <BrowserRouter>
+            <AppRouter />
+          </BrowserRouter>
+        </AuthProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
 

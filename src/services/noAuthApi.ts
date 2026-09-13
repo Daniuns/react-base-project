@@ -1,9 +1,11 @@
-import { API_URL } from "@/settings";
 import axios from "axios";
+import { settings } from "@/settings";
 
 const noAuthApi = axios.create({
-  baseURL: API_URL,
-  timeout: 10000,
+  baseURL: settings.apiUrl,
+  timeout: 10_000,
+  allowAbsoluteUrls: false,
 });
 
+export { noAuthApi };
 export default noAuthApi;

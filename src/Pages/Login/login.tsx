@@ -1,78 +1,130 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { z } from "zod";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { Navigate, useLocation, useNavigate } from "react-router";
+import { PasswordInput } from "@/components/password-input";
+import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  loginCredentialsSchema,
+  type LoginCredentials,
+} from "@/features/auth/auth-api";
+import { useAuth } from "@/features/auth/use-auth";
+
+interface LoginLocationState {
+  from?: string;
+}
 
 const Login = () => {
-  const formSchema = z.object({
-    username: z
-      .string()
-      .email()
-      .min(2, {
-        message: "Username must be at least 2 characters.",
-      })
-      .max(50),
-    password: z
-      .string()
-      .min(6, {
-        message: "Password must be at least 6 characters.",
-      })
-      .max(50),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const { signIn, status } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const form = useForm<LoginCredentials>({
+    resolver: zodResolver(loginCredentialsSchema),
     defaultValues: {
-      username: "",
+      email: "",
+      password: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  if (status === "authenticated") {
+    return <Navigate to="/private" replace />;
   }
+
+  const onSubmit = async (values: LoginCredentials) => {
+    setSubmitError(null);
+
+    try {
+      await signIn(values);
+      const state = location.state as LoginLocationState | null;
+      await navigate(state?.from ?? "/private", { replace: true });
+    } catch {
+      setSubmitError(
+        "Unable to sign in. Check your credentials and try again.",
+      );
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-2 items-center">
-      <h1 className="mb-4">Fazer login no sistema</h1>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input placeholder="Username" {...field} />
-                </FormControl>
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm items-center px-6">
+      <section className="w-full space-y-6" aria-labelledby="login-title">
+        <div className="space-y-2">
+          <h1
+            id="login-title"
+            className="text-2xl font-semibold tracking-tight"
+          >
+            Sign in
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Use the credentials provided by your API.
+          </p>
+        </div>
 
-                <FormMessage className="text-start" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input placeholder="Password" {...field} togglePassword />
-                </FormControl>
+        <form
+          noValidate
+          onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}
+        >
+          <FieldGroup>
+            <Controller
+              control={form.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    {...field}
+                    id="email"
+                    type="email"
+                    autoComplete="username"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
 
-                <FormMessage className="text-start" />
-              </FormItem>
-            )}
-          />
-          <Button type="submit">Submit</Button>
+            <Controller
+              control={form.control}
+              name="password"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <PasswordInput
+                    {...field}
+                    id="password"
+                    autoComplete="current-password"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+
+            {submitError ? (
+              <p role="alert" className="text-sm text-destructive">
+                {submitError}
+              </p>
+            ) : null}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting || status === "loading"}
+            >
+              {form.formState.isSubmitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </FieldGroup>
         </form>
-      </Form>
-    </div>
+      </section>
+    </main>
   );
 };
+
 export default Login;

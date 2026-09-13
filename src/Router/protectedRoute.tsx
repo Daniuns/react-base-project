@@ -1,25 +1,27 @@
-import { Navigate } from "react-router";
-
-import { ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { Navigate, useLocation } from "react-router";
+import { useAuth } from "@/features/auth/use-auth";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { status } = useAuth();
+  const location = useLocation();
 
-  useEffect(() => {
-    // Simulação de verificação assíncrona
-    setTimeout(() => {
-      setIsAuthenticated(!!localStorage.getItem("authToken"));
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
+  if (status === "loading") {
+    return (
+      <main className="grid min-h-dvh place-items-center" aria-busy="true">
+        <p className="text-sm text-muted-foreground">Restoring session…</p>
+      </main>
+    );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (status === "anonymous") {
+    return (
+      <Navigate
+        to="/login"
+        state={{ from: `${location.pathname}${location.search}` }}
+        replace
+      />
+    );
   }
 
   return children;

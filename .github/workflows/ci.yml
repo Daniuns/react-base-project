@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      VITE_API_URL: http://127.0.0.1:3000
+      VITE_EXAMPLE_API_URL: https://api.github.com
+      VITE_TIBIA_WIKI_API_URL: /tibiawiki-api
+      VITE_AUTH_LOGIN_PATH: /auth/login
+      VITE_AUTH_REFRESH_PATH: /auth/refresh
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          version: 12.4.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.13.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
